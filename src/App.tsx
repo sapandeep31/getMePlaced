@@ -11,6 +11,7 @@ import SidePanel from "./components/side-panel/SidePanel";
 import { InterviewAssistant } from "./components/interview/Interview";
 import ResumeUpload from "./components/resume-upload/ResumeUpload";
 import { DSAPracticeCompanion } from "./components/dsacompanion/dsacompanion";
+import { ShoppingAssistant } from "./components/shoppingassistant/shoppingassistant";
 import ControlTray from "./components/control-tray/ControlTray";
 import cn from "classnames";
 
@@ -35,9 +36,10 @@ function App() {
             <main>
               <div className="main-app-area">
                 <Routes>
-                  <Route path="/home" element={<ResumeUpload />} />
+                  <Route path="/" element={<ResumeUpload />} />
                   <Route path="/interview" element={<InterviewAssistant />} />
-                  <Route path="/dsa" element={<DSAPracticeCompanion />} />  
+                  <Route path="/dsa" element={<DSAPracticeCompanion />} />
+                  <Route path="/elderease" element={<ShoppingAssistant />} />
                 </Routes>
                 <video
                   className={cn("stream", {
