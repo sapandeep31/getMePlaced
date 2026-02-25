@@ -245,7 +245,7 @@ CRITICAL: Call generate_feedback silently and directly. No preamble. No narratio
               Technical Interview Assistant
             </h2>
             <p className="text-gray-400 mt-1 text-sm sm:text-base">
-              Say <span className="text-white font-medium bg-white/10 px-2 py-0.5 rounded-md">start interview</span> to begin and <span className="text-white font-medium bg-white/10 px-2 py-0.5 rounded-md">finish interview</span> when you're done.
+              Say <span className="text-white font-medium bg-white/10 px-2 py-0.5 rounded-md">start interview</span> to begin and <span className="text-white font-medium bg-white/10 px-2 py-0.5 rounded-md">finish interview and generate feedback</span> when you're done.
             </p>
           </div>
           
