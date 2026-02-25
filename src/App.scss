@@ -23,10 +23,10 @@
   --background: var(--gray-900);
   --color: var(--text);
 
-  scrollbar-color: var(--gray-600) var(--gray-900);
+  scrollbar-color: var(--gray-600) transparent;
   scrollbar-width: thin;
 
-  --font-family: "Space Mono", monospace;
+  --font-family: inherit;
 
   /* */
   --Neutral-00: #000;
@@ -53,8 +53,8 @@
 }
 
 body {
-  font-family: "Space Mono", monospace;
-  background: var(--Neutral-30);
+  font-family: inherit;
+  background-color: transparent;
 }
 
 .material-symbols-outlined {
@@ -65,30 +65,6 @@ body {
       "GRAD" 0,
       "opsz" 24;
   }
-}
-
-.space-mono-regular {
-  font-family: "Space Mono", monospace;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.space-mono-bold {
-  font-family: "Space Mono", monospace;
-  font-weight: 700;
-  font-style: normal;
-}
-
-.space-mono-regular-italic {
-  font-family: "Space Mono", monospace;
-  font-weight: 400;
-  font-style: italic;
-}
-
-.space-mono-bold-italic {
-  font-family: "Space Mono", monospace;
-  font-weight: 700;
-  font-style: italic;
 }
 
 .hidden {
@@ -114,11 +90,14 @@ body {
 @media (prefers-reduced-motion: no-preference) {}
 
 .streaming-console {
-  background: var(--Neutral-5);
+  background: transparent;
   color: var(--gray-300);
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 80px);
+  /* Account for TopNav */
   width: 100vw;
+  position: relative;
+  z-index: 10;
 
   a,
   a:visited,
@@ -148,9 +127,11 @@ body {
 
   .main-app-area {
     display: flex;
+    flex-direction: column;
     flex: 1;
     align-items: center;
-    justify-content: center;
+    width: 100%;
+    overflow-y: auto;
   }
 
   .function-call {
@@ -168,4 +149,6 @@ body {
   max-width: 90%;
   border-radius: 32px;
   max-height: fit-content;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
