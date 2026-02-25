@@ -23,6 +23,7 @@ An **AI-powered interview preparation platform** that uses Google's Gemini Multi
 - **Visualization**: Vega & Vega-Lite (for future analytics)
 
 ## Getting Started 🎯
+Access Live at: get-me-placed.vercel.app
 
 ### Prerequisites
 
