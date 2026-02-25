@@ -3,23 +3,19 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
   useLocation
 } from "react-router-dom";
 import "./App.scss";
 import { LiveAPIProvider } from "./contexts/LiveAPIContext";
+import { SettingsProvider, useSettings } from "./contexts/SettingsContext";
 import SidePanel from "./components/side-panel/SidePanel";
 import { InterviewAssistant } from "./components/interview/Interview";
 import ResumeUpload from "./components/resume-upload/ResumeUpload";
 import { DSAPracticeCompanion } from "./components/dsacompanion/dsacompanion";
 import ControlTray from "./components/control-tray/ControlTray";
 import TopNav from "./components/top-nav/TopNav";
+import SettingsModal from "./components/settings/SettingsModal";
 import cn from "classnames";
-
-const API_KEY = process.env.REACT_APP_GEMINI_API_KEY as string;
-if (typeof API_KEY !== "string") {
-  throw new Error("set REACT_APP_GEMINI_API_KEY in .env");
-}
 
 const host = "generativelanguage.googleapis.com";
 const uri = `wss://${host}/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent`;
@@ -29,27 +25,27 @@ const AppContent = () => {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const location = useLocation();
+  const { apiKey } = useSettings();
 
   const isResumeUpload = location.pathname === "/" || location.pathname === "";
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Toggle console with Ctrl + Shift + C
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "c") {
         e.preventDefault();
         setIsConsoleOpen((prev) => !prev);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return (
     <div className="App dark bg-neutral-950 h-screen overflow-hidden text-gray-100 font-sans selection:bg-blue-500/30">
-      <LiveAPIProvider url={uri} apiKey={API_KEY}>
+      <LiveAPIProvider url={uri} apiKey={apiKey}>
         <TopNav />
-        <div className="streaming-console mt-20"> 
+        <SettingsModal />
+        <div className="streaming-console mt-20">
           {isConsoleOpen && <SidePanel />}
           <main className={cn("flex-grow transition-all duration-300", {
             "ml-0": !isConsoleOpen,
@@ -87,10 +83,12 @@ const AppContent = () => {
   );
 };
 
-function App() {  
+function App() {
   return (
     <Router>
-      <AppContent />
+      <SettingsProvider>
+        <AppContent />
+      </SettingsProvider>
     </Router>
   );
 }

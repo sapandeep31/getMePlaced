@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import cn from "classnames";
+import { useSettings } from "../../contexts/SettingsContext";
 
 const ResumeUpload = () => {
   const [resumeText, setResumeText] = useState("");
   const navigate = useNavigate();
+  const { apiKey, openSettings } = useSettings();
 
   const handleStartInterview = () => {
     if (!resumeText.trim()) {
@@ -17,6 +19,26 @@ const ResumeUpload = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto p-4 sm:p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* API key nudge — shown when no key is configured */}
+      {!apiKey && (
+        <button
+          onClick={openSettings}
+          className="w-full mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm hover:bg-amber-500/15 hover:border-amber-500/30 transition-all text-left group"
+        >
+          <svg className="w-4 h-4 flex-shrink-0 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          <span className="flex-1">
+            <span className="font-medium text-amber-200">No API key set.</span>
+            {" "}Click here to add your Gemini API key to start interviewing.
+          </span>
+          <svg className="w-4 h-4 flex-shrink-0 text-amber-500 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-600/10 pointer-events-none" />
 

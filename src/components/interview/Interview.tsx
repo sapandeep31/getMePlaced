@@ -2,6 +2,7 @@ import { type FunctionDeclaration, SchemaType } from "@google/generative-ai";
 import { useEffect, useState, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveAPIContext } from "../../contexts/LiveAPIContext";
+import { useSettings } from "../../contexts/SettingsContext";
 import { ToolCall } from "../../multimodal-live-types";
 
 interface FeedbackType {
@@ -80,6 +81,7 @@ function InterviewAssistantComponent() {
   const [hasStarted, setHasStarted] = useState(false);
   const [hasManuallyDisconnected, setHasManuallyDisconnected] = useState(false);
   const { client, setConfig, disconnect, connect, connected } = useLiveAPIContext();
+  const { model } = useSettings();
 
   const handleDisconnect = useCallback(() => {
     setHasManuallyDisconnected(true);
@@ -103,8 +105,19 @@ function InterviewAssistantComponent() {
       return;
     }
 
+    // Recover any feedback from a previous session that may have been
+    // interrupted by a server disconnect before React could render it
+    const savedFeedback = localStorage.getItem("gmp_last_feedback");
+    if (savedFeedback) {
+      try {
+        setFeedback(JSON.parse(savedFeedback));
+        setIsInterviewActive(false);
+      } catch {
+        localStorage.removeItem("gmp_last_feedback");
+      }
+    }
     setConfig({
-      model: "models/gemini-2.5-flash-native-audio-latest",
+      model: model,
       generationConfig: {
         responseModalities: "audio",
       },
@@ -143,8 +156,10 @@ INTERVIEW STRUCTURE:
 CANDIDATE RESUME DETAILS:
 ${resumeText}
 
-FEEDBACK GENERATION:
-Evaluate the candidate holistically across the following categories:
+WHENEVER the candidate says "finish interview", "done", "end interview", "that's all", etc.:
+- Call the generate_feedback function IMMEDIATELY and show the feedback, you can use INSUFFICIENT DATA to fill areas in the feedback if the interview was ended prematurely or you dont have enough data.
+
+SCORING GUIDE for generate_feedback:
 1. Technical knowledge (30%)
 2. Problem-solving skills (20%)
 3. Project understanding (15%)
@@ -152,18 +167,10 @@ Evaluate the candidate holistically across the following categories:
 5. Communication skills (10%)
 6. Resume quality (15%)
 
-Also provide:
-1. Resume Optimization:
-   - Structure and formatting suggestions
-   - Content improvements
-   - Keywords and highlighting achievements
-   
-2. Career Development Plan:
-   - Suggested projects aligned with market demands
-   - Recommended tech stack based on career goals
-   - Structured learning path with resources
-   
-   DONT SPEAK ANYTHING AFTER GENERATING FEEDBACK (no need of explaining the feedback i mean)`,
+Resume feedback: structure, content improvements, keywords.
+Career development: relevant projects, tech stack to learn, learning path.
+
+CRITICAL: Call generate_feedback silently and directly. No preamble. No narration during the call.`,
           },
         ],
       },
@@ -172,13 +179,18 @@ Also provide:
     setHasStarted(true);
   }, [setConfig, navigate]);
 
+  // Connect ONCE when the interview page is ready — never auto-reconnect on drops.
+  // If the AI ends the session (e.g. after generating feedback) this will NOT fire again
+  // because hasStarted stays `true` and the effect only re-runs when it *changes*.
+  // Manual reconnects go through the ControlTray, which calls connect() directly.
   useEffect(() => {
-    if (hasStarted && !connected && !isDisconnecting && !hasManuallyDisconnected) {
+    if (hasStarted) {
       connect().then(() => setIsInterviewActive(true)).catch(console.error);
     }
-  }, [hasStarted, connected, connect, isDisconnecting, hasManuallyDisconnected]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasStarted]); // intentionally omit `connect` — fire exactly once
 
-  // If ControlTray reconnects manually, resume tracking the interview state
+  // When ControlTray reconnects manually, restore the interview-active UI state
   useEffect(() => {
     if (connected && hasManuallyDisconnected) {
       setHasManuallyDisconnected(false);
@@ -192,23 +204,28 @@ Also provide:
       const fc = toolCall.functionCalls.find(
         (fc) => fc.name === declaration.name
       );
-      if (fc) {
-        const args = fc.args as FeedbackType;
-        setFeedback(args);
-        setIsInterviewActive(false);
+
+      // Send tool response synchronously (no setTimeout) to avoid the 200ms
+      // window where audio chunks could conflict with server processing
+      if (toolCall.functionCalls.length) {
+        try {
+          client.sendToolResponse({
+            functionResponses: toolCall.functionCalls.map((fc) => ({
+              response: { output: { success: true } },
+              id: fc.id,
+            })),
+          });
+        } catch (e) {
+          console.warn("sendToolResponse failed:", e);
+        }
       }
 
-      if (toolCall.functionCalls.length) {
-        setTimeout(
-          () =>
-            client.sendToolResponse({
-              functionResponses: toolCall.functionCalls.map((fc) => ({
-                response: { output: { success: true } },
-                id: fc.id,
-              })),
-            }),
-          200
-        );
+      if (fc) {
+        const args = fc.args as FeedbackType;
+        // Persist immediately so it survives an unexpected server disconnect
+        try { localStorage.setItem("gmp_last_feedback", JSON.stringify(args)); } catch {}
+        setFeedback(args);
+        setIsInterviewActive(false);
       }
     };
     client.on("toolcall", onToolCall);

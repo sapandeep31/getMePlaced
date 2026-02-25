@@ -1,12 +1,14 @@
 import { useEffect, useState, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLiveAPIContext } from "../../contexts/LiveAPIContext";
+import { useSettings } from "../../contexts/SettingsContext";
 
 function DSAPracticeCompanionComponent() {
   const navigate = useNavigate();
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const { client, setConfig, disconnect } = useLiveAPIContext();
+  const { model } = useSettings();
 
   const dsaResources = [
     {
@@ -38,7 +40,7 @@ function DSAPracticeCompanionComponent() {
 
   useEffect(() => {
     setConfig({
-      model: "models/gemini-2.5-flash-native-audio-latest",
+      model: model,
       generationConfig: {
         responseModalities: "audio",
       },
